@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Gorilla Type (Production Scaffold)
 
-## Getting Started
+This repository now includes a full-stack Gorilla Type implementation scaffold:
 
-First, run the development server:
+1. Next.js App Router frontend
+2. Convex schema/functions for core product data
+3. Auth.js authentication (credentials + OAuth providers)
+4. API routes wiring UI panels to backend data
+5. Share pages and OG image generation
+
+## Local Setup
+
+1. Copy `.env.example` to `.env.local`
+2. Fill environment values:
+   - `NEXT_PUBLIC_CONVEX_URL`
+   - `CONVEX_DEPLOY_KEY`
+   - `NEXTAUTH_SECRET`
+   - `NEXTAUTH_URL`
+   - `ALLOWED_ORIGINS`
+   - optional OAuth provider IDs/secrets
+   - optional Sentry DSNs + org/project
+
+3. Start the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. In another terminal, start Convex dev sync:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npx convex dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Validation
 
-## Learn More
+```bash
+npm run test
+npm run lint
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Notes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Guest test runs are supported.
+2. Signed-in users have persisted settings/profile/notifications/history.
+3. Shared results are available at `/share/:slug`.
+4. Account danger zone supports data export and deletion request (7-day grace window).
+5. Leaderboard/profile/notifications use Convex live subscriptions.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deploy frontend on Vercel and point it to your production Convex deployment.

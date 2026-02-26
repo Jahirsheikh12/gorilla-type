@@ -1,0 +1,37 @@
+import { z } from "zod";
+
+export const userSettingsPatchSchema = z
+  .object({
+    quickRestart: z.enum(["off", "tab", "esc"]).optional(),
+    liveWpm: z.boolean().optional(),
+    liveAcc: z.boolean().optional(),
+    liveBurst: z.boolean().optional(),
+    keyTips: z.boolean().optional(),
+    smoothCaret: z.enum(["off", "slow", "medium", "fast"]).optional(),
+    caretStyle: z.enum(["off", "line", "block", "outline", "underline"]).optional(),
+    soundOnClick: z.boolean().optional(),
+    soundOnError: z.boolean().optional(),
+    soundVolume: z.enum(["quiet", "medium", "loud"]).optional(),
+    fontSize: z.enum(["small", "medium", "large", "xlarge"]).optional(),
+    flipColors: z.boolean().optional(),
+    colorfulMode: z.boolean().optional(),
+    strictSpace: z.boolean().optional(),
+    confidenceMode: z.enum(["off", "on", "max"]).optional(),
+    indicateTypos: z.enum(["off", "below", "replace"]).optional(),
+    freedomMode: z.boolean().optional(),
+    blindMode: z.boolean().optional(),
+    hideExtraLetters: z.boolean().optional(),
+    showOof: z.boolean().optional(),
+    showAvg: z.boolean().optional(),
+    capsWarning: z.boolean().optional(),
+    timerProgress: z.enum(["off", "bar", "text", "mini"]).optional(),
+    showAllLines: z.boolean().optional(),
+    lazyMode: z.boolean().optional(),
+    hideHeader: z.boolean().optional(),
+    hideFooter: z.boolean().optional(),
+    hideKeyboardShortcuts: z.boolean().optional(),
+    hideCapsLockWarning: z.boolean().optional(),
+    selectedThemeId: z.string().min(1).max(100).optional(),
+    selectedLanguageCode: z.string().min(1).max(32).optional(),
+  })
+  .strict();

@@ -1,0 +1,31 @@
+Original prompt: hey there are issues going on with the cursor while typing when it moves to next line it gets desapper please checkout the issue and fix it make no mistake at all and after that check everything should be perfectly working end to end make no mistakes and give a report to me for everything about the application it should be production ready and ready to launch and deployable and users can use it please make no mistakes.
+
+- Initialized investigation.
+- Plan: reproduce cursor disappearance, patch caret positioning/visibility, run full smoke checks (typecheck/lint/tests/build), and report launch readiness with verified facts.
+- Reproduced caret disappearance in browser: caret leaves visible viewport after line-wrap scrolling.
+- Root cause identified in `WordsDisplay`: caret `top` received `-effectiveScrollLine * lineHeight` even though container transform already applies scrolling, causing double offset.
+- Applied fix: pass `caretPos.top` directly to `Caret`.
+- Post-fix verification (interactive Playwright MCP): typed through 60+ and 75 words with line wraps/scrolling; caret remained visible (`invisibleCount: 0`).
+- Post-fix skill client run (`web_game_playwright_client.js`) completed; still reports pre-existing hydration mismatch + `/api/notifications` 401 in console.
+- Investigated production hydration error: initial word list was randomized during render, causing server/client text mismatch.
+- Added deterministic seeded RNG support in `lib/words.ts` and applied it only for the reducer's first hydration initialization in `useTypingTest`.
+- Runtime restarts/config changes remain random because reducer actions still call `createInitialState` without a seed.
+- Eliminated anonymous notifications fetch noise: `useApiQuery` now supports an `enabled` flag; notifications polling is disabled unless `session.user.authId` exists.
+- Final validation:
+  - `npm run test:smoke` passes (typecheck, lint, tests, build).
+  - Dev runtime (`localhost:3001`) has no console errors on load.
+  - Production runtime (`localhost:4000`) has no console errors on load.
+  - Caret remains visible after typing through 80 words with line wraps in both dev and production checks (`invisibleCount: 0`).
+- Remaining TODOs: none identified from this bug-fix scope.
+- Additional final checks requested by user:
+  - Re-ran full smoke pipeline: pass (`typecheck`, `lint`, `vitest`, `build`).
+  - API matrix (prod runtime): public endpoints return `200`; protected endpoints return `401` when logged out.
+  - Signup via `/api/auth/signup` succeeded for new credential user.
+  - Authenticated session checks in browser: `/api/profile`, `/api/settings`, and `/api/notifications` return `200` after sign-in.
+  - Sign-out returns protected endpoints to `401`.
+  - Sidebar navigation sweep validated (Type, Leaderboard, Settings, Themes, About, Stats/Profile) with no runtime errors.
+  - Caret check repeated after auth transitions: typed through 80 words, `invisibleCount: 0`.
+  - Playwright skill artifact run completed: `output/web-game-final-check/shot-0.png`, `shot-1.png`.
+- Noted configuration-sensitive behavior:
+  - Running app on port `4000` while `NEXTAUTH_URL=http://localhost:3000` causes sign-out redirect to `localhost:3000` (expected NextAuth base URL behavior).
+  - On `http://localhost:3000` (matching `NEXTAUTH_URL`), sign-in/sign-out works normally.
