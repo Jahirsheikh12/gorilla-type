@@ -12,6 +12,7 @@ import { ThemeSelector } from "./ThemeSelector";
 import { LeaderboardPanel } from "./LeaderboardPanel";
 import { ProfilePanel } from "./ProfilePanel";
 import { AboutPanel } from "./AboutPanel";
+import { TypingKeyboard } from "./TypingKeyboard";
 import type { ActiveView } from "./types";
 
 interface TypingTestViewRouterProps {
@@ -22,6 +23,7 @@ interface TypingTestViewRouterProps {
   setConfig: (payload: Partial<TestConfig>) => void;
   setFocus: (focused: boolean) => void;
   onTypingKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  pressedKeyCodes: ReadonlySet<string>;
   onShare: () => Promise<void>;
   onGoToTest: () => void;
   onSetView: (view: ActiveView) => void;
@@ -38,6 +40,7 @@ export function TypingTestViewRouter({
   setConfig,
   setFocus,
   onTypingKeyDown,
+  pressedKeyCodes,
   onShare,
   onGoToTest,
   onSetView,
@@ -76,7 +79,9 @@ export function TypingTestViewRouter({
                 state={state}
                 handleKeyDown={onTypingKeyDown}
                 setFocus={setFocus}
-                hideCapsLockWarning={settings.hideCapsLockWarning || !settings.capsWarning}
+                hideCapsLockWarning={
+                  settings.hideCapsLockWarning || !settings.capsWarning
+                }
                 hideExtraLetters={settings.hideExtraLetters}
                 indicateTypos={settings.indicateTypos}
                 showOof={settings.showOof}
@@ -87,21 +92,25 @@ export function TypingTestViewRouter({
                 smoothCaret={settings.smoothCaret}
               />
               {settings.keyTips && (
-                <div className="mt-6 flex items-center justify-center gap-4 text-[11px] text-[var(--color-gt-untyped)]/60">
+                <div className="mt-6 flex items-center justify-center gap-4 text-[11px] text-gt-untyped/60">
                   <span className="inline-flex items-center gap-1.5">
-                    <kbd className="rounded border border-[var(--color-gt-untyped)]/15 bg-[var(--color-gt-sub)]/50 px-1.5 py-0.5 font-mono text-[10px]">
+                    <kbd className="rounded border border-gt-untyped/15 bg-gt-sub/50 px-1.5 py-0.5 font-mono text-[10px]">
                       tab
                     </kbd>
                     restart
                   </span>
                   <span className="inline-flex items-center gap-1.5">
-                    <kbd className="rounded border border-[var(--color-gt-untyped)]/15 bg-[var(--color-gt-sub)]/50 px-1.5 py-0.5 font-mono text-[10px]">
+                    <kbd className="rounded border border-gt-untyped/15 bg-gt-sub/50 px-1.5 py-0.5 font-mono text-[10px]">
                       ctrl+shift+p
                     </kbd>
                     command palette
                   </span>
                 </div>
               )}
+              <TypingKeyboard
+                pressedCodes={pressedKeyCodes}
+                capsLockOn={state.capsLock}
+              />
             </div>
           </div>
         )}

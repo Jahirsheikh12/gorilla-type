@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useRef, useLayoutEffect, useState, useCallback, useEffect } from "react";
+import React, {
+  useRef,
+  useLayoutEffect,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import type { TypingState } from "@/hooks/useTypingTest";
 import { Caret } from "./Caret";
 import { Keyboard } from "lucide-react";
@@ -62,7 +68,11 @@ const CharSpan = React.memo(function CharSpan({
   }
 
   return (
-    <span ref={charRef} style={{ color }} className="transition-colors duration-75">
+    <span
+      ref={charRef}
+      style={{ color }}
+      className="transition-colors duration-75"
+    >
       {char}
     </span>
   );
@@ -91,8 +101,8 @@ const CompletedWord = React.memo(function CompletedWord({
             typedChar === char
               ? "correct"
               : indicateTypos === "off"
-              ? "pending"
-              : "incorrect";
+                ? "pending"
+                : "incorrect";
         }
         return (
           <CharSpan
@@ -104,14 +114,16 @@ const CompletedWord = React.memo(function CompletedWord({
         );
       })}
       {!hideExtraLetters &&
-        typed.slice(word.length).map((char, ci) => (
-          <CharSpan
-            key={`extra-${ci}`}
-            char={char}
-            status="extra"
-            colorfulMode={colorfulMode}
-          />
-        ))}
+        typed
+          .slice(word.length)
+          .map((char, ci) => (
+            <CharSpan
+              key={`extra-${ci}`}
+              char={char}
+              status="extra"
+              colorfulMode={colorfulMode}
+            />
+          ))}
     </span>
   );
 });
@@ -133,7 +145,11 @@ export function WordsDisplay({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const currentCharRef = useRef<HTMLSpanElement | null>(null);
-  const [caretPos, setCaretPos] = useState({ top: 0, left: 0, height: DEFAULT_LINE_HEIGHT });
+  const [caretPos, setCaretPos] = useState({
+    top: 0,
+    left: 0,
+    height: DEFAULT_LINE_HEIGHT,
+  });
   const [scrollLine, setScrollLine] = useState(0);
   const caretPosRef = useRef(caretPos);
 
@@ -189,13 +205,23 @@ export function WordsDisplay({
         setScrollLine(nextScrollLine);
       }
     }
-  }, [lineHeight, scrollLine, showAllLines, state.currentWordIndex, state.typedWords, state.words]);
+  }, [
+    lineHeight,
+    scrollLine,
+    showAllLines,
+    state.currentWordIndex,
+    state.typedWords,
+    state.words,
+  ]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (state.isFocused || state.phase === "finished") return;
       const target = event.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) {
+      if (
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA")
+      ) {
         return;
       }
 
@@ -217,7 +243,8 @@ export function WordsDisplay({
   const wi = state.currentWordIndex;
   const currentWord = state.words[wi] || "";
   const currentTyped = state.typedWords[wi] || [];
-  const effectiveScrollLine = state.phase === "config" || showAllLines ? 0 : scrollLine;
+  const effectiveScrollLine =
+    state.phase === "config" || showAllLines ? 0 : scrollLine;
   const isTyping = state.lastTypeTime > 0 && state.phase === "running";
   const showGradientBorder = state.phase === "running";
 
@@ -274,7 +301,9 @@ export function WordsDisplay({
           ref={containerRef}
           className="relative flex flex-wrap font-mono"
           style={{
-            transform: showAllLines ? "none" : `translateY(-${effectiveScrollLine * lineHeight}px)`,
+            transform: showAllLines
+              ? "none"
+              : `translateY(-${effectiveScrollLine * lineHeight}px)`,
             transition: showAllLines ? "none" : "transform 0.15s ease-out",
           }}
         >
@@ -309,8 +338,8 @@ export function WordsDisplay({
                         typedChar === char
                           ? "correct"
                           : indicateTypos === "off"
-                          ? "pending"
-                          : "incorrect";
+                            ? "pending"
+                            : "incorrect";
                     }
                     const isRefChar = ci === refCharIdx;
                     return (

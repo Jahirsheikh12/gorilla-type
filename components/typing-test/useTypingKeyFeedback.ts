@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type React from "react";
 import type { TypingState } from "@/hooks/useTypingTest";
 import type { UserSettings } from "@/lib/types";
@@ -27,6 +27,51 @@ export function useTypingKeyFeedback({
   handleKeyDown,
 }: UseTypingKeyFeedbackArgs) {
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const [pressedCodes, setPressedCodes] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    const addPressedCode = (event: KeyboardEvent) => {
+      if (!event.code) return;
+      setPressedCodes((previous) => {
+        if (previous.has(event.code)) {
+          return previous;
+        }
+
+        const next = new Set(previous);
+        next.add(event.code);
+        return next;
+      });
+    };
+
+    const removePressedCode = (event: KeyboardEvent) => {
+      if (!event.code) return;
+      setPressedCodes((previous) => {
+        if (!previous.has(event.code)) {
+          return previous;
+        }
+
+        const next = new Set(previous);
+        next.delete(event.code);
+        return next;
+      });
+    };
+
+    const clearPressedCodes = () => {
+      setPressedCodes((previous) => (previous.size === 0 ? previous : new Set()));
+    };
+
+    window.addEventListener("keydown", addPressedCode);
+    window.addEventListener("keyup", removePressedCode);
+    window.addEventListener("blur", clearPressedCodes);
+    document.addEventListener("visibilitychange", clearPressedCodes);
+
+    return () => {
+      window.removeEventListener("keydown", addPressedCode);
+      window.removeEventListener("keyup", removePressedCode);
+      window.removeEventListener("blur", clearPressedCodes);
+      document.removeEventListener("visibilitychange", clearPressedCodes);
+    };
+  }, []);
 
   const playTone = useCallback((frequency: number, duration = 0.02, gain = 0.02) => {
     if (typeof window === "undefined") return;
@@ -118,5 +163,5 @@ export function useTypingKeyFeedback({
     ]
   );
 
-  return { handleTypingKeyDown };
+  return { handleTypingKeyDown, pressedCodes };
 }

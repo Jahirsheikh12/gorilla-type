@@ -45,7 +45,7 @@ function TypingTestInner() {
     !!session?.user?.authId
   );
   const notifications = notificationsQuery.data;
-  const { handleTypingKeyDown } = useTypingKeyFeedback({
+  const { handleTypingKeyDown, pressedCodes } = useTypingKeyFeedback({
     settings,
     state,
     handleKeyDown,
@@ -207,6 +207,7 @@ function TypingTestInner() {
           setConfig={setConfig}
           setFocus={setFocus}
           onTypingKeyDown={handleTypingKeyDown}
+          pressedKeyCodes={pressedCodes}
           onShare={handleShare}
           onGoToTest={goToTest}
           onSetView={setView}
