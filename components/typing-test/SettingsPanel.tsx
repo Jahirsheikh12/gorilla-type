@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { signOut } from "next-auth/react";
 import {
   Settings,
@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   ChevronRight,
   Monitor,
+  Search,
   X,
 } from "lucide-react";
 import { useThemeContext } from "@/hooks/useTheme";
@@ -127,6 +128,8 @@ export function SettingsPanel({
   isAuthenticated,
 }: SettingsPanelProps) {
   const [category, setCategory] = useState<SettingsCategory>("behavior");
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const { theme } = useThemeContext();
   const languagesQuery = useApiQuery<Array<{ code: string; name: string; variant?: string }>>(
     "/api/languages",
@@ -150,6 +153,114 @@ export function SettingsPanel({
     persist({ [key]: value } as Partial<UserSettings>);
   };
 
+  type SearchableSetting = {
+    label: string;
+    description: string;
+    category: string;
+    render: () => React.ReactNode;
+  };
+
+  const searchableSettings: SearchableSetting[] = useMemo(() => [
+    // Behavior
+    { label: "Quick restart", description: "Press tab or esc to quickly restart the test", category: "Behavior", render: () => (
+      <Select label="Quick restart" description="Press tab or esc to quickly restart the test" value={settings.quickRestart} options={["off", "tab", "esc"]} onChange={(v) => setValue("quickRestart", v as UserSettings["quickRestart"])} />
+    )},
+    { label: "Live WPM", description: "Show live WPM during the test", category: "Behavior", render: () => (
+      <Toggle label="Live WPM" description="Show live WPM during the test" checked={settings.liveWpm} onChange={() => toggle("liveWpm")} />
+    )},
+    { label: "Live accuracy", description: "Show live accuracy during the test", category: "Behavior", render: () => (
+      <Toggle label="Live accuracy" description="Show live accuracy during the test" checked={settings.liveAcc} onChange={() => toggle("liveAcc")} />
+    )},
+    { label: "Live burst", description: "Show live burst speed", category: "Behavior", render: () => (
+      <Toggle label="Live burst" description="Show live burst speed" checked={settings.liveBurst} onChange={() => toggle("liveBurst")} />
+    )},
+    { label: "Key tips", description: "Show key tips below typing area", category: "Behavior", render: () => (
+      <Toggle label="Key tips" description="Show key tips below typing area" checked={settings.keyTips} onChange={() => toggle("keyTips")} />
+    )},
+    { label: "Caps lock warning", description: "Show a warning when caps lock is on", category: "Behavior", render: () => (
+      <Toggle label="Caps lock warning" description="Show a warning when caps lock is on" checked={settings.capsWarning} onChange={() => toggle("capsWarning")} />
+    )},
+    { label: "Show oof message", description: "Show out of focus message", category: "Behavior", render: () => (
+      <Toggle label="Show oof message" description="Show out of focus message" checked={settings.showOof} onChange={() => toggle("showOof")} />
+    )},
+    { label: "Show averages", description: "Show average values in results", category: "Behavior", render: () => (
+      <Toggle label="Show averages" description="Show average values in results" checked={settings.showAvg} onChange={() => toggle("showAvg")} />
+    )},
+    { label: "Lazy mode", description: "Accept lazy inputs", category: "Behavior", render: () => (
+      <Toggle label="Lazy mode" description="Accept lazy inputs" checked={settings.lazyMode} onChange={() => toggle("lazyMode")} />
+    )},
+    // Input
+    { label: "Freedom mode", description: "Allow going back to previous words", category: "Input", render: () => (
+      <Toggle label="Freedom mode" description="Allow going back to previous words" checked={settings.freedomMode} onChange={() => toggle("freedomMode")} />
+    )},
+    { label: "Confidence mode", description: "Restrict backspace usage", category: "Input", render: () => (
+      <Select label="Confidence mode" description="Restrict backspace usage" value={settings.confidenceMode} options={["off", "on", "max"]} onChange={(v) => setValue("confidenceMode", v as UserSettings["confidenceMode"])} />
+    )},
+    { label: "Indicate typos", description: "How to show incorrect characters", category: "Input", render: () => (
+      <Select label="Indicate typos" description="How to show incorrect characters" value={settings.indicateTypos} options={["off", "below", "replace"]} onChange={(v) => setValue("indicateTypos", v as UserSettings["indicateTypos"])} />
+    )},
+    { label: "Strict space", description: "Pressing space at the beginning of a word will count as an error", category: "Input", render: () => (
+      <Toggle label="Strict space" description="Pressing space at the beginning of a word will count as an error" checked={settings.strictSpace} onChange={() => toggle("strictSpace")} />
+    )},
+    { label: "Blind mode", description: "Hide character corrections", category: "Input", render: () => (
+      <Toggle label="Blind mode" description="Hide character corrections" checked={settings.blindMode} onChange={() => toggle("blindMode")} />
+    )},
+    // Sound
+    { label: "Click sound", description: "Play a sound on each keypress", category: "Sound", render: () => (
+      <Toggle label="Click sound" description="Play a sound on each keypress" checked={settings.soundOnClick} onChange={() => toggle("soundOnClick")} />
+    )},
+    { label: "Error sound", description: "Play a sound on errors", category: "Sound", render: () => (
+      <Toggle label="Error sound" description="Play a sound on errors" checked={settings.soundOnError} onChange={() => toggle("soundOnError")} />
+    )},
+    { label: "Volume", description: "Sound effect volume", category: "Sound", render: () => (
+      <Select label="Volume" description="Sound effect volume" value={settings.soundVolume} options={["quiet", "medium", "loud"]} onChange={(v) => setValue("soundVolume", v as UserSettings["soundVolume"])} />
+    )},
+    // Caret
+    { label: "Caret style", description: "The style of the typing caret", category: "Caret", render: () => (
+      <Select label="Style" description="The style of the typing caret" value={settings.caretStyle} options={["off", "line", "block", "outline", "underline"]} onChange={(v) => setValue("caretStyle", v as UserSettings["caretStyle"])} />
+    )},
+    { label: "Caret smoothness", description: "How smooth the caret movement is", category: "Caret", render: () => (
+      <Select label="Smoothness" description="How smooth the caret movement is" value={settings.smoothCaret} options={["off", "slow", "medium", "fast"]} onChange={(v) => setValue("smoothCaret", v as UserSettings["smoothCaret"])} />
+    )},
+    // Appearance
+    { label: "Font size", description: "Size of the test text", category: "Appearance", render: () => (
+      <Select label="Font size" description="Size of the test text" value={settings.fontSize} options={["small", "medium", "large", "xlarge"]} onChange={(v) => setValue("fontSize", v as UserSettings["fontSize"])} />
+    )},
+    { label: "Flip colors", description: "Swap text and background colors", category: "Appearance", render: () => (
+      <Toggle label="Flip colors" description="Swap text and background colors" checked={settings.flipColors} onChange={() => toggle("flipColors")} />
+    )},
+    { label: "Colorful mode", description: "Color correct characters based on key position", category: "Appearance", render: () => (
+      <Toggle label="Colorful mode" description="Color correct characters based on key position" checked={settings.colorfulMode} onChange={() => toggle("colorfulMode")} />
+    )},
+    { label: "Timer/progress", description: "How to display test progress", category: "Appearance", render: () => (
+      <Select label="Timer/progress" description="How to display test progress" value={settings.timerProgress} options={["off", "bar", "text", "mini"]} onChange={(v) => setValue("timerProgress", v as UserSettings["timerProgress"])} />
+    )},
+    { label: "Show all lines", description: "Show all lines instead of scrolling", category: "Appearance", render: () => (
+      <Toggle label="Show all lines" description="Show all lines instead of scrolling" checked={settings.showAllLines} onChange={() => toggle("showAllLines")} />
+    )},
+    // Hide elements
+    { label: "Hide extra letters", description: "Don't show extra typed characters", category: "Hide elements", render: () => (
+      <Toggle label="Hide extra letters" description="Don't show extra typed characters" checked={settings.hideExtraLetters} onChange={() => toggle("hideExtraLetters")} />
+    )},
+    { label: "Hide keyboard shortcuts", description: "Hide keyboard shortcut hints", category: "Hide elements", render: () => (
+      <Toggle label="Hide keyboard shortcuts" description="Hide keyboard shortcut hints" checked={settings.hideKeyboardShortcuts} onChange={() => toggle("hideKeyboardShortcuts")} />
+    )},
+    { label: "Hide caps lock warning", description: "Don't show caps lock warning", category: "Hide elements", render: () => (
+      <Toggle label="Hide caps lock warning" description="Don't show caps lock warning" checked={settings.hideCapsLockWarning} onChange={() => toggle("hideCapsLockWarning")} />
+    )},
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [settings, toggle, setValue]);
+
+  const filteredSettings = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    return searchableSettings.filter(
+      (s) => s.label.toLowerCase().includes(q) || s.description.toLowerCase().includes(q) || s.category.toLowerCase().includes(q)
+    );
+  }, [searchQuery, searchableSettings]);
+
+  const isSearchActive = searchQuery.trim().length > 0;
+
   return (
     <>
       {/* Backdrop */}
@@ -157,9 +268,6 @@ export function SettingsPanel({
 
       {/* Slide-out panel from right */}
       <div className="fixed top-0 right-0 z-50 flex h-screen w-full max-w-xl flex-col bg-[var(--color-gt-sub)] shadow-2xl slide-in-right">
-        {/* Power bar */}
-        <div className="gt-power-bar" />
-
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--color-gt-untyped)]/10 px-6 py-4">
           <h2 className="font-heading text-lg font-bold text-[var(--color-gt-text)]">Settings</h2>
@@ -171,8 +279,64 @@ export function SettingsPanel({
           </button>
         </div>
 
+        {/* Search bar */}
+        <div className="border-b border-[var(--color-gt-untyped)]/10 px-6 py-3">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-gt-untyped)]" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search settings..."
+              className="w-full rounded-xl border border-[var(--color-gt-untyped)]/15 bg-[var(--color-gt-bg)] py-2 pl-9 pr-9 font-body text-sm text-[var(--color-gt-text)] placeholder-[var(--color-gt-untyped)] outline-none transition-colors focus:border-[var(--color-gt-accent)]/40 focus:ring-1 focus:ring-[var(--color-gt-accent)]/20"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  searchInputRef.current?.focus();
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-[var(--color-gt-untyped)] transition-colors hover:text-[var(--color-gt-text)]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Content area with sidebar categories */}
         <div className="flex flex-1 overflow-hidden">
+          {isSearchActive ? (
+            /* Search results view */
+            <div className="gt-scroll flex-1 overflow-y-auto p-6">
+              {filteredSettings.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Search className="mb-3 h-8 w-8 text-[var(--color-gt-untyped)]/30" />
+                  <div className="font-body text-sm text-[var(--color-gt-untyped)]">
+                    No settings found for &ldquo;{searchQuery}&rdquo;
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="mb-3 font-body text-xs text-[var(--color-gt-untyped)]">
+                    {filteredSettings.length} result{filteredSettings.length !== 1 ? "s" : ""}
+                  </div>
+                  <div className="divide-y divide-[var(--color-gt-untyped)]/10">
+                    {filteredSettings.map((s, i) => (
+                      <div key={i}>
+                        <div className="pt-1 font-body text-[10px] font-medium uppercase tracking-wider text-[var(--color-gt-accent)]/60">
+                          {s.category}
+                        </div>
+                        {s.render()}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+          <>
           {/* Category sidebar */}
           <div className="gt-scroll w-48 shrink-0 overflow-y-auto border-r border-[var(--color-gt-untyped)]/10 p-3">
             {CATEGORIES.map((cat) => (
@@ -449,6 +613,8 @@ export function SettingsPanel({
               </div>
             )}
           </div>
+          </>
+          )}
         </div>
       </div>
     </>

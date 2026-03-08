@@ -12,7 +12,7 @@ export function ThemeSelector({ onBack }: ThemeSelectorProps) {
   const { theme: currentTheme, setThemeById, allThemes } = useThemeContext();
 
   return (
-    <div className="results-animate flex h-[80vh] max-h-[750px] flex-col overflow-hidden rounded-3xl border border-[var(--color-gt-untyped)]/10 bg-[var(--color-gt-sub)] gt-power-bar">
+    <div className="results-animate flex h-[80vh] max-h-[750px] flex-col overflow-hidden rounded-3xl border border-[var(--color-gt-untyped)]/10 bg-[var(--color-gt-sub)]">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-[var(--color-gt-untyped)]/10 px-6 py-4">
         <button

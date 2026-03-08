@@ -58,6 +58,8 @@ export function TypingTestViewRouter({
             restart={restart}
             onShare={onShare}
             showAverages={settings.showAvg}
+            mode={state.config.mode}
+            modeKey={`${state.config.mode}:${state.config.mode === "time" ? state.config.timeDuration : state.config.wordCount}`}
           />
         ) : (
           <div className="w-full">
@@ -92,18 +94,30 @@ export function TypingTestViewRouter({
                 smoothCaret={settings.smoothCaret}
               />
               {settings.keyTips && (
-                <div className="mt-6 flex items-center justify-center gap-4 text-[11px] text-gt-untyped/60">
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-gt-untyped/60">
                   <span className="inline-flex items-center gap-1.5">
                     <kbd className="rounded border border-gt-untyped/15 bg-gt-sub/50 px-1.5 py-0.5 font-mono text-[10px]">
                       tab
                     </kbd>
-                    restart
+                    restart test
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <kbd className="rounded border border-gt-untyped/15 bg-gt-sub/50 px-1.5 py-0.5 font-mono text-[10px]">
+                      esc
+                    </kbd>
+                    end test
                   </span>
                   <span className="inline-flex items-center gap-1.5">
                     <kbd className="rounded border border-gt-untyped/15 bg-gt-sub/50 px-1.5 py-0.5 font-mono text-[10px]">
                       ctrl+shift+p
                     </kbd>
                     command palette
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <kbd className="rounded border border-gt-untyped/15 bg-gt-sub/50 px-1.5 py-0.5 font-mono text-[10px]">
+                      ctrl+backspace
+                    </kbd>
+                    delete word
                   </span>
                 </div>
               )}

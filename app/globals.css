@@ -369,3 +369,109 @@ body::before {
 .text-glow-accent2 {
   text-shadow: 0 0 30px color-mix(in srgb, var(--color-gt-accent2) 25%, transparent);
 }
+
+/* ============================================
+   Accessibility: Reduced Motion Support
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .view-animate,
+  .bento-animate,
+  .gt-gradient-border,
+  .gt-power-bar {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .animate-caret-blink {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .animate-word-pop,
+  .animate-char-shake,
+  .animate-dot-pulse,
+  .animate-skeleton-pulse {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .animate-modal-in,
+  .animate-modal-content-in,
+  .animate-cmd-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .animate-slide-in-right,
+  .animate-slide-out-right {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .animate-sidebar-item-hover {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .animate-draw-line {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+
+  .animate-mesh-rotate {
+    animation: none !important;
+  }
+}
+
+/* ============================================
+   Accessibility: Focus-Visible for Keyboard Nav
+   ============================================ */
+*:focus-visible {
+  outline: 2px solid var(--color-gt-accent, #10b981);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.focus-ring-accent:focus-visible {
+  outline-color: var(--color-gt-accent, #10b981);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-gt-accent, #10b981) 25%, transparent);
+}
+
+.focus-ring-accent2:focus-visible {
+  outline-color: var(--color-gt-accent2, #8b5cf6);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-gt-accent2, #8b5cf6) 25%, transparent);
+}
+
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  padding: 0.75rem 1.5rem;
+  background: var(--color-gt-bg, #0a0a0a);
+  color: var(--color-gt-accent, #10b981);
+  border: 2px solid var(--color-gt-accent, #10b981);
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skip-to-content:focus-visible {
+  top: 1rem;
+}

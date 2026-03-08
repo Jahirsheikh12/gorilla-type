@@ -93,9 +93,6 @@ export function Sidebar({
         forceVisible ? "flex" : "hidden md:flex"
       } ${collapsed ? "w-16" : "w-60"}`}
     >
-      {/* Power bar */}
-      <div className="gt-power-bar" />
-
       {/* Logo */}
       <div className={`flex items-center gap-2.5 px-4 pt-5 pb-4 ${collapsed ? "justify-center px-2" : ""}`}>
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--color-gt-accent)]/10">

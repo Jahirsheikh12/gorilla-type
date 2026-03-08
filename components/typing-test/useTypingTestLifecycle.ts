@@ -201,7 +201,9 @@ export function useTypingTestLifecycle({
   }, [flushPendingSubmissions]);
 
   const handleShare = useCallback(async () => {
-    if (!lastResultId) return;
+    if (!lastResultId) {
+      throw new Error("No result to share. Sign in to share your results.");
+    }
 
     const shared = await apiFetch<{ slug: string }>("/api/shares", {
       method: "POST",

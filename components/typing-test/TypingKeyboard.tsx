@@ -3,6 +3,10 @@
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 
+/* ------------------------------------------------------------------ */
+/*  Key definitions                                                    */
+/* ------------------------------------------------------------------ */
+
 interface KeyboardKeyDef {
   id: string;
   label: string;
@@ -10,6 +14,8 @@ interface KeyboardKeyDef {
   codes: string[];
   flex?: number;
   align?: "center" | "start" | "end";
+  /** Row-unit height for tall keys (default 1) */
+  h?: number;
 }
 
 interface TypingKeyboardProps {
@@ -35,7 +41,7 @@ const KEYBOARD_ROWS: KeyboardKeyDef[][] = [
     { id: "equal", label: "=", shiftLabel: "+", codes: ["Equal"] },
     {
       id: "backspace",
-      label: "bksp",
+      label: "backspace",
       codes: ["Backspace"],
       flex: 2.3,
       align: "end",
@@ -72,7 +78,7 @@ const KEYBOARD_ROWS: KeyboardKeyDef[][] = [
   [
     {
       id: "capslock",
-      label: "caps",
+      label: "caps lock",
       codes: ["CapsLock"],
       flex: 2.1,
       align: "start",
@@ -126,7 +132,7 @@ const KEYBOARD_ROWS: KeyboardKeyDef[][] = [
     },
     { id: "metaleft", label: "meta", codes: ["MetaLeft"], flex: 1.45 },
     { id: "altleft", label: "alt", codes: ["AltLeft"], flex: 1.25 },
-    { id: "space", label: "space", codes: ["Space"], flex: 6.4 },
+    { id: "space", label: "", codes: ["Space"], flex: 6.4 },
     { id: "altright", label: "alt", codes: ["AltRight"], flex: 1.25 },
     { id: "metaright", label: "meta", codes: ["MetaRight"], flex: 1.45 },
     {
@@ -141,66 +147,183 @@ const KEYBOARD_ROWS: KeyboardKeyDef[][] = [
 
 const ACCENT_KEYS = new Set(["escape", "enter", "backspace"]);
 
+/* ------------------------------------------------------------------ */
+/*  Mechanical key-cap style generator                                 */
+/* ------------------------------------------------------------------ */
+
 function getKeyStyle(
   active: boolean,
   latched: boolean,
   isAccentKey: boolean = false,
 ): CSSProperties {
+  /* ---- Pressed / bottomed-out ---- */
   if (active) {
-    const accentColor = isAccentKey
+    const accent = isAccentKey
       ? "var(--color-gt-accent2)"
       : "var(--color-gt-accent)";
     return {
-      background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 32%, rgba(255,255,255,0.15) 68%), color-mix(in srgb, ${accentColor} 16%, var(--color-gt-sub) 84%))`,
-      borderColor: `color-mix(in srgb, ${accentColor} 60%, transparent)`,
-      boxShadow: `0 0 0 1px color-mix(in srgb, ${accentColor} 45%, transparent), inset 0 2px 8px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.2), 0 8px 32px -6px color-mix(in srgb, ${accentColor} 80%, transparent)`,
+      /* Key pushed down: surface descends, shadow collapses */
+      background: `
+        linear-gradient(
+          180deg,
+          color-mix(in srgb, ${accent} 40%, rgba(255,255,255,0.10)) 0%,
+          color-mix(in srgb, ${accent} 20%, var(--color-gt-sub)) 100%
+        )`,
+      borderColor: `color-mix(in srgb, ${accent} 55%, transparent)`,
+      boxShadow: `
+        0 1px 0 0 rgba(0,0,0,0.95),
+        inset 0 2px 6px rgba(0,0,0,0.6),
+        inset 0 -1px 1px rgba(255,255,255,0.05),
+        0 0 18px -4px color-mix(in srgb, ${accent} 70%, transparent)
+      `,
       color: "#ffffff",
-      textShadow: `0 0 16px color-mix(in srgb, ${accentColor} 90%, transparent)`,
-      transform: "translateY(5px)",
+      textShadow: `0 0 10px color-mix(in srgb, ${accent} 85%, transparent)`,
+      transform: "translateY(4px) scale(0.98)",
     };
   }
 
+  /* ---- Latched (caps-lock) ---- */
   if (latched) {
     return {
-      background:
-        "linear-gradient(180deg, color-mix(in srgb, var(--color-gt-accent2) 24%, rgba(255,255,255,0.08) 76%), color-mix(in srgb, var(--color-gt-sub) 86%, black 14%))",
+      background: `
+        linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--color-gt-accent2) 28%, rgba(255,255,255,0.06)) 0%,
+          color-mix(in srgb, var(--color-gt-sub) 82%, black 18%) 100%
+        )`,
       borderColor:
-        "color-mix(in srgb, var(--color-gt-accent2) 45%, transparent)",
-      boxShadow:
-        "0 4px 0 rgba(0,0,0,0.9), 0 5px 14px rgba(0,0,0,0.8), 0 0 0 1px color-mix(in srgb, var(--color-gt-accent2) 25%, transparent), inset 0 1px 0 color-mix(in srgb, white 25%, transparent)",
+        "color-mix(in srgb, var(--color-gt-accent2) 50%, transparent)",
+      boxShadow: `
+        0 3px 0 0 rgba(0,0,0,0.9),
+        0 4px 10px rgba(0,0,0,0.7),
+        0 0 0 1px color-mix(in srgb, var(--color-gt-accent2) 30%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 20%, transparent),
+        inset 0 -1px 2px rgba(0,0,0,0.3)
+      `,
       color: "var(--color-gt-text)",
       textShadow:
-        "0 0 12px color-mix(in srgb, var(--color-gt-accent2) 60%, transparent)",
+        "0 0 10px color-mix(in srgb, var(--color-gt-accent2) 55%, transparent)",
       transform: "translateY(1px)",
     };
   }
 
+  /* ---- Default (raised) ---- */
   return {
-    background:
-      "linear-gradient(180deg, color-mix(in srgb, var(--color-gt-sub) 92%, rgba(255,255,255,0.04) 8%), color-mix(in srgb, var(--color-gt-bg) 70%, black 30%))",
-    borderColor: "color-mix(in srgb, var(--color-gt-untyped) 25%, transparent)",
-    boxShadow:
-      "0 5px 0 rgba(0,0,0,0.95), 0 6px 14px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.08)",
-    color: "color-mix(in srgb, var(--color-gt-text) 85%, transparent)",
+    background: `
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-gt-sub) 90%, rgba(255,255,255,0.06)) 0%,
+        color-mix(in srgb, var(--color-gt-sub) 70%, black 30%) 60%,
+        color-mix(in srgb, var(--color-gt-bg) 60%, black 40%) 100%
+      )`,
+    borderColor: "color-mix(in srgb, var(--color-gt-untyped) 20%, transparent)",
+    boxShadow: `
+      0 4px 0 0 color-mix(in srgb, var(--color-gt-bg) 50%, black 50%),
+      0 5px 8px rgba(0,0,0,0.6),
+      0 6px 16px rgba(0,0,0,0.35),
+      inset 0 1px 0 rgba(255,255,255,0.07),
+      inset 0 -1px 2px rgba(0,0,0,0.25)
+    `,
+    color: "color-mix(in srgb, var(--color-gt-text) 80%, transparent)",
     transform: "translateY(0)",
   };
 }
+
+/* ------------------------------------------------------------------ */
+/*  Component                                                          */
+/* ------------------------------------------------------------------ */
 
 export function TypingKeyboard({
   pressedCodes,
   capsLockOn,
 }: TypingKeyboardProps) {
-  return (
-    <section className="mt-8 mb-12 relative [perspective:1200px] w-full max-w-[900px] mx-auto hidden sm:block">
-      <div className="absolute inset-0 -z-10 rounded-[40px] bg-[var(--color-gt-accent)]/5 blur-[80px]" />
 
-      <div className="relative rounded-[24px] border-b-[3px] border-r border-t border-[var(--color-gt-untyped)]/30 bg-[linear-gradient(165deg,color-mix(in_srgb,var(--color-gt-sub)_88%,white_12%),color-mix(in_srgb,var(--color-gt-bg)_75%,black_25%))] p-2 sm:p-3 md:p-4 shadow-[0_45px_100px_-30px_rgba(0,0,0,1),inset_0_4px_16px_rgba(0,0,0,0.9)] w-full">
-        <div className="relative rounded-[16px] md:rounded-[20px] border border-black/50 bg-[linear-gradient(180deg,rgba(0,0,0,0.45),rgba(0,0,0,0.15))] p-2 sm:p-3 md:p-4 shadow-[inset_0_0_24px_rgba(0,0,0,0.95)]">
-          <div className="w-full space-y-1.5 md:space-y-2">
+  return (
+    <section className="mt-8 mb-12 relative [perspective:1200px] w-full max-w-[920px] mx-auto hidden sm:block">
+      {/* Ambient glow beneath the board */}
+      <div className="absolute inset-0 -z-10 rounded-[48px] bg-[var(--color-gt-accent)]/4 blur-[100px]" />
+
+      {/* ---- Outer case (CNC aluminium look) ---- */}
+      <div
+        className="relative rounded-[20px] border border-[var(--color-gt-untyped)]/20 p-[6px] sm:p-2 md:p-[10px] w-full"
+        style={{
+          background: `
+            linear-gradient(
+              170deg,
+              color-mix(in srgb, var(--color-gt-sub) 85%, white 15%) 0%,
+              color-mix(in srgb, var(--color-gt-bg) 80%, black 20%) 50%,
+              color-mix(in srgb, var(--color-gt-bg) 65%, black 35%) 100%
+            )
+          `,
+          boxShadow: `
+            0 50px 100px -30px rgba(0,0,0,0.9),
+            0 25px 60px -20px rgba(0,0,0,0.7),
+            inset 0 1px 0 rgba(255,255,255,0.08),
+            inset 0 -1px 0 rgba(0,0,0,0.3)
+          `,
+        }}
+      >
+        {/* Top bezel detail — LED strip / brand area */}
+        <div className="flex items-center justify-between px-3 md:px-5 pt-1 pb-1.5 md:pb-2">
+          {/* Left: 3 indicator LEDs */}
+          <div className="flex gap-1.5 md:gap-2 items-center">
+            {/* Caps Lock LED */}
+            <div
+              className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all duration-200"
+              style={{
+                background: capsLockOn
+                  ? "var(--color-gt-accent2)"
+                  : "rgba(255,255,255,0.06)",
+                boxShadow: capsLockOn
+                  ? "0 0 6px var(--color-gt-accent2), 0 0 12px color-mix(in srgb, var(--color-gt-accent2) 50%, transparent)"
+                  : "inset 0 1px 2px rgba(0,0,0,0.5)",
+              }}
+            />
+            <div
+              className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                boxShadow: "inset 0 1px 2px rgba(0,0,0,0.5)",
+              }}
+            />
+            <div
+              className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                boxShadow: "inset 0 1px 2px rgba(0,0,0,0.5)",
+              }}
+            />
+          </div>
+          {/* Right: subtle brand text */}
+          <span className="text-[8px] md:text-[9px] uppercase tracking-[0.3em] font-mono opacity-15 text-[var(--color-gt-text)] select-none">
+            gorilla type
+          </span>
+        </div>
+
+        {/* ---- Inner plate (sunken keycap area) ---- */}
+        <div
+          className="relative rounded-[12px] md:rounded-[14px] border border-black/40 p-1.5 sm:p-2 md:p-2.5"
+          style={{
+            background: `
+              linear-gradient(
+                180deg,
+                rgba(0,0,0,0.5) 0%,
+                rgba(0,0,0,0.25) 40%,
+                rgba(0,0,0,0.35) 100%
+              )
+            `,
+            boxShadow: `
+              inset 0 2px 12px rgba(0,0,0,0.9),
+              inset 0 0 1px rgba(0,0,0,0.5),
+              0 1px 0 rgba(255,255,255,0.04)
+            `,
+          }}
+        >
+          <div className="w-full space-y-[3px] md:space-y-1">
             {KEYBOARD_ROWS.map((row) => (
               <div
                 key={row[0]?.id}
-                className="flex gap-1 md:gap-1.5 lg:gap-2 w-full"
+                className="flex gap-[3px] md:gap-1 lg:gap-[5px] w-full"
               >
                 {row.map((keyDef) => {
                   const isPressed = keyDef.codes.some((code) =>
@@ -213,15 +336,21 @@ export function TypingKeyboard({
                   const isHomingKey =
                     keyDef.id === "keyf" || keyDef.id === "keyj";
                   const isAccentKey = ACCENT_KEYS.has(keyDef.id);
+                  const isSpace = keyDef.id === "space";
 
                   return (
                     <div
                       key={keyDef.id}
                       className={cn(
-                        "relative flex min-w-0 flex-1 select-none rounded-[6px] md:rounded-[8px] lg:rounded-[10px] border px-1 md:px-2 py-1 md:py-2 transition-[transform,box-shadow,border-color,background-color,color,text-shadow] duration-[40ms] ease-out mb-1",
+                        "group relative flex min-w-0 flex-1 select-none border",
+                        "rounded-[5px] md:rounded-[7px] lg:rounded-[8px]",
+                        "transition-[transform,box-shadow,border-color,background-color,color,text-shadow]",
+                        "duration-[35ms] ease-out",
                         isDualLegend
-                          ? "h-[36px] md:h-[44px] lg:h-[52px] items-start justify-start"
-                          : "h-[34px] md:h-[40px] lg:h-[48px] items-center",
+                          ? "h-[34px] md:h-[42px] lg:h-[50px] items-start justify-start px-1.5 md:px-2 pt-1 md:pt-1.5"
+                          : isSpace
+                            ? "h-[30px] md:h-[36px] lg:h-[42px] items-center justify-center"
+                            : "h-[34px] md:h-[42px] lg:h-[50px] items-center px-1 md:px-2",
                         keyDef.align === "start" && "justify-start",
                         keyDef.align === "center" && "justify-center",
                         keyDef.align === "end" && "justify-end",
@@ -232,24 +361,44 @@ export function TypingKeyboard({
                         flexBasis: 0,
                       }}
                     >
-                      <span className="pointer-events-none absolute inset-x-[15%] top-[1px] h-[0.5px] md:h-px rounded-full bg-white/10" />
+                      {/* Top shine highlight (keycap edge catch) */}
+                      <span
+                        className="pointer-events-none absolute inset-x-[12%] top-[1px] h-[1px] rounded-full"
+                        style={{
+                          background: isPressed
+                            ? "rgba(255,255,255,0.03)"
+                            : "rgba(255,255,255,0.09)",
+                        }}
+                      />
 
+                      {/* Bottom shadow lip (keycap underside) */}
+                      <span
+                        className="pointer-events-none absolute inset-x-[8%] bottom-0 h-[1px] rounded-full"
+                        style={{
+                          background: "rgba(0,0,0,0.3)",
+                        }}
+                      />
+
+                      {/* ---- Key legend content ---- */}
                       {keyDef.shiftLabel ? (
                         <div className="flex w-full flex-col items-start leading-none opacity-[0.85]">
-                          <span className="text-[7px] md:text-[8px] lg:text-[10px] font-semibold uppercase tracking-[0.05em] md:tracking-widest text-current/60">
+                          <span className="text-[7px] md:text-[8px] lg:text-[10px] font-semibold uppercase tracking-[0.05em] md:tracking-widest text-current/55">
                             {keyDef.shiftLabel}
                           </span>
-                          <span className="mt-auto text-[9px] md:text-[11px] lg:text-[13px] font-bold uppercase tracking-[0.05em] md:tracking-widest text-current">
+                          <span className="mt-auto text-[9px] md:text-[11px] lg:text-[13px] font-bold uppercase tracking-[0.05em] md:tracking-widest text-current mb-0.5">
                             {keyDef.label}
                           </span>
                         </div>
+                      ) : isSpace ? (
+                        /* Spacebar: clean with subtle texture line */
+                        <div className="w-[45%] h-[2px] rounded-full bg-current opacity-[0.06]" />
                       ) : (
                         <div
                           className={cn(
-                            "w-full font-bold uppercase text-current opacity-[0.85]",
+                            "w-full font-bold uppercase text-current opacity-[0.85] font-mono",
                             isLongLabel
-                              ? "text-[7px] md:text-[9px] lg:text-[11px] tracking-[0.05em] md:tracking-widest"
-                              : "text-[9px] md:text-[11px] lg:text-[13px] tracking-[0.1em] md:tracking-[0.15em]",
+                              ? "text-[6px] md:text-[8px] lg:text-[10px] tracking-[0.05em] md:tracking-widest"
+                              : "text-[9px] md:text-[11px] lg:text-[13px] tracking-[0.08em] md:tracking-[0.12em]",
                             keyDef.align === "start" &&
                               "text-left pl-0.5 md:pl-1",
                             keyDef.align === "center" && "text-center",
@@ -265,12 +414,33 @@ export function TypingKeyboard({
                         </div>
                       )}
 
+                      {/* Homing bump (F and J keys) */}
                       {isHomingKey && (
                         <div
                           className={cn(
-                            "absolute bottom-1 md:bottom-1.5 lg:bottom-2 left-1/2 h-[2px] md:h-[3px] w-[8px] md:w-[12px] lg:w-[14px] -translate-x-1/2 rounded-full shadow-[0_1px_1px_rgba(255,255,255,0.15)]",
-                            isPressed ? "bg-white/40" : "bg-black/50",
+                            "absolute bottom-[5px] md:bottom-[7px] lg:bottom-[9px] left-1/2 -translate-x-1/2",
+                            "h-[1.5px] md:h-[2px] w-[8px] md:w-[10px] lg:w-[12px] rounded-full",
                           )}
+                          style={{
+                            background: isPressed
+                              ? "rgba(255,255,255,0.35)"
+                              : "rgba(255,255,255,0.12)",
+                            boxShadow: isPressed
+                              ? "0 0 4px rgba(255,255,255,0.15)"
+                              : "0 1px 1px rgba(0,0,0,0.4)",
+                          }}
+                        />
+                      )}
+
+                      {/* Caps lock active indicator dot */}
+                      {keyDef.id === "capslock" && capsLockOn && (
+                        <div
+                          className="absolute top-1.5 md:top-2 right-2 md:right-3 w-1 h-1 md:w-1.5 md:h-1.5 rounded-full"
+                          style={{
+                            background: "var(--color-gt-accent2)",
+                            boxShadow:
+                              "0 0 4px var(--color-gt-accent2), 0 0 8px color-mix(in srgb, var(--color-gt-accent2) 40%, transparent)",
+                          }}
                         />
                       )}
                     </div>
@@ -279,6 +449,12 @@ export function TypingKeyboard({
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Bottom bezel — rubber feet hints */}
+        <div className="flex justify-between px-6 md:px-10 pt-1 md:pt-1.5 pb-0.5">
+          <div className="w-6 md:w-8 h-[2px] rounded-full bg-black/20" />
+          <div className="w-6 md:w-8 h-[2px] rounded-full bg-black/20" />
         </div>
       </div>
     </section>

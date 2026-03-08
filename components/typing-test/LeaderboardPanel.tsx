@@ -69,7 +69,7 @@ export function LeaderboardPanel({
   const rest = data.slice(3);
 
   return (
-    <div className="results-animate flex h-[80vh] max-h-[750px] flex-col overflow-hidden rounded-3xl border border-[var(--color-gt-untyped)]/10 bg-[var(--color-gt-sub)] gt-power-bar">
+    <div className="results-animate flex h-[80vh] max-h-[750px] flex-col overflow-hidden rounded-3xl border border-[var(--color-gt-untyped)]/10 bg-[var(--color-gt-sub)]">
       <div className="flex items-center justify-between border-b border-[var(--color-gt-untyped)]/10 px-6 py-4">
         <div className="flex items-center gap-2">
           <Crown className="h-5 w-5 text-[var(--color-gt-accent)]" />

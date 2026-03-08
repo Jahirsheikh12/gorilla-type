@@ -156,6 +156,8 @@ export function WordsDisplay({
   const computedFontSize = FONT_SIZE_MAP[fontSize];
   const lineHeight = Math.round(computedFontSize * 1.85);
 
+  const [blurTimestamp, setBlurTimestamp] = useState(0);
+
   const focusInput = useCallback(() => {
     inputRef.current?.focus();
   }, []);
@@ -214,6 +216,13 @@ export function WordsDisplay({
     state.words,
   ]);
 
+  // Auto-refocus: if focus was lost recently (within 3s) and user starts typing, refocus automatically
+  useEffect(() => {
+    if (!state.isFocused && state.phase !== "finished") {
+      setBlurTimestamp(Date.now());
+    }
+  }, [state.isFocused, state.phase]);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (state.isFocused || state.phase === "finished") return;
@@ -240,6 +249,36 @@ export function WordsDisplay({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [focusInput, state.isFocused, state.phase]);
 
+  // Auto-refocus within 3 seconds of blur
+  useEffect(() => {
+    if (state.isFocused || state.phase === "finished" || blurTimestamp === 0)
+      return;
+
+    const timeout = setTimeout(() => {
+      // After 3 seconds, the auto-refocus window expires (no action needed,
+      // the overlay stays as-is until user clicks or presses a key)
+    }, 3000);
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      const elapsed = Date.now() - blurTimestamp;
+      if (elapsed <= 3000) {
+        const target = event.target as HTMLElement | null;
+        if (
+          target &&
+          (target.tagName === "INPUT" || target.tagName === "TEXTAREA")
+        )
+          return;
+        focusInput();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      clearTimeout(timeout);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [blurTimestamp, focusInput, state.isFocused, state.phase]);
+
   const wi = state.currentWordIndex;
   const currentWord = state.words[wi] || "";
   const currentTyped = state.typedWords[wi] || [];
@@ -247,9 +286,13 @@ export function WordsDisplay({
     state.phase === "config" || showAllLines ? 0 : scrollLine;
   const isTyping = state.lastTypeTime > 0 && state.phase === "running";
   const showGradientBorder = state.phase === "running";
+  const showBlurOverlay = !state.isFocused && state.phase !== "finished" && showOof;
 
   return (
     <div
+      role="textbox"
+      aria-label="Typing test area"
+      aria-readonly="true"
       className={`relative cursor-text rounded-2xl p-4 transition-all duration-300 ${
         showGradientBorder ? "gt-gradient-border" : ""
       }`}
@@ -262,28 +305,41 @@ export function WordsDisplay({
         onKeyDown={handleKeyDown}
         onFocus={() => setFocus(true)}
         onBlur={() => setFocus(false)}
-        aria-label="Type here"
+        aria-label="Typing test input - type here to begin"
+        aria-describedby={state.capsLock ? "caps-lock-warning" : undefined}
+        role="textbox"
         autoComplete="off"
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
       />
 
-      {!state.isFocused && state.phase !== "finished" && showOof && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl backdrop-blur-[3px]">
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-gt-accent)]/10">
-              <Keyboard className="h-5 w-5 text-[var(--color-gt-accent)]" />
-            </div>
-            <span className="font-body text-sm text-[var(--color-gt-untyped)]">
+      {/* Focus overlay with pill */}
+      <div
+        className={`pointer-events-none absolute inset-0 z-20 flex items-center justify-center rounded-2xl transition-opacity duration-300 ease-out ${
+          showBlurOverlay ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        aria-hidden="true"
+      >
+        {showBlurOverlay && (
+          <div
+            className="pointer-events-auto flex items-center gap-2 rounded-full border border-[var(--color-gt-untyped)]/15 bg-[var(--color-gt-sub)]/90 px-3.5 py-1.5 shadow-lg backdrop-blur-sm"
+          >
+            <Keyboard className="h-3.5 w-3.5 text-[var(--color-gt-untyped)]" />
+            <span className="font-body text-xs text-[var(--color-gt-untyped)]">
               Click or press any key to focus
             </span>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {state.capsLock && !hideCapsLockWarning && (
-        <div className="mb-3 flex items-center justify-center gap-2 text-sm text-[var(--color-gt-error)]">
+        <div
+          id="caps-lock-warning"
+          role="alert"
+          aria-live="polite"
+          className="mb-3 flex items-center justify-center gap-2 text-sm text-[var(--color-gt-error)]"
+        >
           <div className="h-1.5 w-1.5 rounded-full bg-[var(--color-gt-error)]" />
           Caps Lock is on
         </div>
@@ -295,6 +351,9 @@ export function WordsDisplay({
           height: showAllLines ? "auto" : VISIBLE_LINES * lineHeight,
           fontSize: computedFontSize,
           lineHeight: `${lineHeight}px`,
+          filter: showBlurOverlay ? "blur(4px)" : "blur(0px)",
+          opacity: showBlurOverlay ? 0.5 : 1,
+          transition: "filter 0.3s ease-out, opacity 0.3s ease-out",
         }}
       >
         <div
